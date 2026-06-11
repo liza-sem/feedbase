@@ -5,8 +5,8 @@ FROM node:18-alpine AS alpine
 FROM alpine as base
 ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
-RUN corepack enable
-RUN pnpm install turbo --global
+RUN corepack enable && corepack prepare pnpm@8.6.2 --activate
+RUN pnpm install turbo@1.13.4 --global
 RUN apk add --update python3 make g++ && rm -rf /var/cache/apk/*
 
 FROM base AS builder
