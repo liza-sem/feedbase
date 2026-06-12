@@ -29,7 +29,7 @@ import { Button } from 'ui/components/ui/button';
 import { Input } from 'ui/components/ui/input';
 import { Textarea } from 'ui/components/ui/textarea';
 import { ChangelogProps } from '@/lib/types';
-import Editor from '@/components/dashboard/changelogs/content-editor';
+import ChangelogContentEditor from '@/components/dashboard/changelogs/content-editor';
 import { PublishDatePicker } from '@/components/dashboard/changelogs/date-picker';
 import FileDrop from '@/components/dashboard/changelogs/image-upload';
 import TooltipLabel from '@/components/shared/tooltip-label';
@@ -45,14 +45,15 @@ export function AddChangelogModal({
   changelogData?: ChangelogProps['Row'];
   isEdit?: boolean;
 }) {
-  const defaultEditorContent =
-    '<p>Write <em>styled</em> <mark>markdown</mark> in <strong>here</strong>.</p><p>Examples:</p><ul><li><p><code>#</code>, <code>##</code>, <code>###</code>, <code>####</code>, <code>#####</code>, <code>######</code> for different headings</p></li></ul><ul><li><p><code>==highlight==</code> for <mark>highlighted text</mark></p></li><li><p> <code>**bold**, *italic* and ~~strike~~</code> for <strong>bold</strong>,  <em>italic and <s>strike</s></em></p></li><li><p>and much more like  <code>(c)</code>, <code>-&gt;</code>, <code>&gt;&gt;</code>, <code>1/2</code>, <code>!=</code>, or <code>--</code></p></li></ul>';
+  function isContentEmpty(content: string | null | undefined) {
+    return (content || '').replace(/<[^>]*>/g, '').trim().length === 0;
+  }
 
   const [data, setData] = useState<ChangelogProps['Row']>({
     id: changelogData?.id || '',
     project_id: changelogData?.project_id || '',
     title: changelogData?.title || '',
-    content: changelogData?.content || defaultEditorContent,
+    content: changelogData?.content || '',
     summary: changelogData?.summary || '',
     image: changelogData?.image || null,
     publish_date: changelogData?.publish_date || null,
@@ -220,8 +221,7 @@ export function AddChangelogModal({
               </div>
             </div>
 
-            {/* Markdown Editor */}
-            <Editor data={data} setData={setData} />
+            <ChangelogContentEditor data={data} setData={setData} />
           </div>
           {/* isEdit or no data changed yet from default */}
           {isEdit ||
@@ -229,7 +229,7 @@ export function AddChangelogModal({
             !data.summary &&
             !data.image &&
             !data.publish_date &&
-            data.content === defaultEditorContent) ? (
+            isContentEmpty(data.content)) ? (
             <ResponsiveDialogClose className='right-4 top-4 hidden rounded-sm opacity-70 hover:opacity-100 sm:absolute' />
           ) : (
             <AlertDialog>
@@ -256,7 +256,7 @@ export function AddChangelogModal({
                           id: changelogData?.id || '',
                           project_id: changelogData?.project_id || '',
                           title: changelogData?.title || '',
-                          content: changelogData?.content || defaultEditorContent,
+                          content: changelogData?.content || '',
                           summary: changelogData?.summary || '',
                           image: changelogData?.image || null,
                           publish_date: changelogData?.publish_date || null,
@@ -312,8 +312,7 @@ export function AddChangelogModal({
                 disabled={
                   data.title === '' ||
                   data.summary === '' ||
-                  data.content === '' ||
-                  data.content === defaultEditorContent ||
+                  isContentEmpty(data.content) ||
                   data.image === null ||
                   data.publish_date === null
                 }>
