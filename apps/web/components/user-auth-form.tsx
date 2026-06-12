@@ -12,10 +12,12 @@ export function UserAuthForm({
   authType,
   successRedirect,
   buttonsClassname,
+  showGitHub = false,
 }: {
   authType: 'sign-in' | 'sign-up';
   successRedirect?: string;
   buttonsClassname?: string;
+  showGitHub?: boolean;
 }) {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [provider, setProvider] = useState<'github' | 'email'>('github');
@@ -67,6 +69,7 @@ export function UserAuthForm({
     const { error } = await supabase.auth.signInWithOtp({
       email,
       options: {
+        shouldCreateUser: authType === 'sign-up',
         emailRedirectTo: `${location.origin}/auth/callback?successRedirect=${
           successRedirect || location.origin
         }`,
@@ -154,27 +157,31 @@ export function UserAuthForm({
           </Button>
         </div>
       </form>
-      <div className='relative'>
-        <div className='absolute inset-0 flex items-center'>
-          <span className='w-full border-t' />
-        </div>
-        <div className='relative flex justify-center text-xs uppercase'>
-          <span className='bg-root text-muted-foreground px-2'>Or continue with</span>
-        </div>
-      </div>
-      <Button
-        variant='outline'
-        type='button'
-        disabled={isLoading}
-        onClick={handleGitHubSignIn}
-        className={buttonsClassname}>
-        {isLoading && provider === 'github' ? (
-          <Icons.Spinner className='mr-2 h-4 w-4 animate-spin' />
-        ) : (
-          <Icons.Github className='mr-2 h-4 w-4' />
-        )}{' '}
-        Github
-      </Button>
+      {showGitHub ? (
+        <>
+          <div className='relative'>
+            <div className='absolute inset-0 flex items-center'>
+              <span className='w-full border-t' />
+            </div>
+            <div className='relative flex justify-center text-xs uppercase'>
+              <span className='bg-root text-muted-foreground px-2'>Or continue with</span>
+            </div>
+          </div>
+          <Button
+            variant='outline'
+            type='button'
+            disabled={isLoading}
+            onClick={handleGitHubSignIn}
+            className={buttonsClassname}>
+            {isLoading && provider === 'github' ? (
+              <Icons.Spinner className='mr-2 h-4 w-4 animate-spin' />
+            ) : (
+              <Icons.Github className='mr-2 h-4 w-4' />
+            )}{' '}
+            Github
+          </Button>
+        </>
+      ) : null}
     </div>
   );
 }
