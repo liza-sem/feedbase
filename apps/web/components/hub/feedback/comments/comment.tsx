@@ -15,6 +15,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from 'ui/components/ui/dropdown-menu';
+import { getPublicAuthorInitial, getPublicAuthorName, getPublicAvatarUrl } from '@/lib/hub-author';
 import { FeedbackCommentWithUserProps, ProfileProps } from '@/lib/types';
 import { formatRootUrl } from '@/lib/utils';
 import { Icons } from '@/components/shared/icons/icons-static';
@@ -26,10 +27,18 @@ interface CommentProps extends React.HTMLAttributes<HTMLDivElement> {
   commentData: FeedbackCommentWithUserProps;
   projectSlug: string;
   user: ProfileProps['Row'] | null;
+  hideAuthorNames?: boolean;
   children?: React.ReactNode;
 }
 
-export default function Comment({ commentData, projectSlug, user, children, ...props }: CommentProps) {
+export default function Comment({
+  commentData,
+  projectSlug,
+  user,
+  hideAuthorNames = false,
+  children,
+  ...props
+}: CommentProps) {
   const [comment, setComment] = useState<FeedbackCommentWithUserProps>(commentData);
   const [replyContent, setReplyContent] = useState<string>('');
   const [isReplying, setIsReplying] = useState<boolean>(false);
@@ -191,10 +200,15 @@ export default function Comment({ commentData, projectSlug, user, children, ...p
             {/* User */}
             <Avatar className='h-8 w-8 gap-2 overflow-visible border'>
               <div className='h-full w-full overflow-hidden rounded-full'>
-                <AvatarImage src={comment.user.avatar_url || ''} alt={comment.user.full_name} />
-                <AvatarFallback className='text-xs font-light'>{comment.user.full_name[0]}</AvatarFallback>
+                <AvatarImage
+                  src={getPublicAvatarUrl(comment.user.avatar_url, hideAuthorNames)}
+                  alt={getPublicAuthorName(comment.user.full_name, hideAuthorNames)}
+                />
+                <AvatarFallback className='text-xs font-light'>
+                  {getPublicAuthorInitial(comment.user.full_name, hideAuthorNames)}
+                </AvatarFallback>
                 {/* If team member, add small verified badge to top of profile picture */}
-                {commentData.user.isTeamMember ? (
+                {!hideAuthorNames && commentData.user.isTeamMember ? (
                   <div className='bg-root absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full'>
                     <BadgeCheck className='fill-highlight stroke-root outline-root z-10 h-4 w-4 outline-2' />
                   </div>
@@ -202,7 +216,10 @@ export default function Comment({ commentData, projectSlug, user, children, ...p
               </div>
             </Avatar>
             {/* Name */}
-            <span className='text-foreground/90 text-sm'>{comment.user.full_name}</span>·{/* Time ago */}
+            <span className='text-foreground/90 text-sm'>
+              {getPublicAuthorName(comment.user.full_name, hideAuthorNames)}
+            </span>
+            ·{/* Time ago */}
             {!timeAgo ? (
               <Skeleton className='h-4 w-20 rounded-sm' />
             ) : (

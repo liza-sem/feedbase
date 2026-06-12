@@ -9,6 +9,7 @@ import {
   ProjectProps,
   TeamMemberProps,
 } from '@/lib/types';
+import { HubCustomTab, parseHubCustomTabs } from '@/lib/hub-tabs';
 import { generateApiToken, isSlugValid, isValidUrl } from '@/lib/utils';
 
 // Get Project
@@ -256,7 +257,7 @@ export const getProjectConfigBySlug = withProjectAuth<ProjectConfigWithoutSecret
     const { data: config, error: configError } = await supabase
       .from('project_configs')
       .select(
-        'id, created_at, project_id, changelog_preview_style, changelog_twitter_handle, integration_discord_status, integration_discord_webhook, integration_discord_role_id, custom_domain, custom_domain_verified, integration_sso_status, integration_sso_url, feedback_allow_anon_upvoting, custom_theme, custom_theme_background, custom_theme_border, custom_theme_primary_foreground, custom_theme_root, custom_theme_secondary_background, custom_theme_accent, integration_slack_status, integration_slack_webhook, logo_redirect_url, changelog_enabled'
+        'id, created_at, project_id, changelog_preview_style, changelog_twitter_handle, integration_discord_status, integration_discord_webhook, integration_discord_role_id, custom_domain, custom_domain_verified, integration_sso_status, integration_sso_url, feedback_allow_anon_upvoting, feedback_hide_author_names, hub_custom_tabs, custom_theme, custom_theme_background, custom_theme_border, custom_theme_primary_foreground, custom_theme_root, custom_theme_secondary_background, custom_theme_accent, integration_slack_status, integration_slack_webhook, logo_redirect_url, changelog_enabled'
       )
       .eq('project_id', project!.id);
 
@@ -318,6 +319,35 @@ export const updateProjectConfigBySlug = (
       };
     }
 
+    let hubCustomTabs: HubCustomTab[] | undefined;
+
+    if (data.hub_custom_tabs !== undefined) {
+      hubCustomTabs = parseHubCustomTabs(data.hub_custom_tabs);
+
+      if (hubCustomTabs.length > 8) {
+        return {
+          data: null,
+          error: { message: 'hub_custom_tabs supports at most 8 links', status: 400 },
+        };
+      }
+
+      for (const tab of hubCustomTabs) {
+        if (tab.name.length > 40) {
+          return {
+            data: null,
+            error: { message: 'Custom tab names must be 40 characters or fewer', status: 400 },
+          };
+        }
+
+        if (!isValidUrl(tab.url) || !/^https?:\/\//i.test(tab.url)) {
+          return {
+            data: null,
+            error: { message: 'Custom tab URLs must be valid http(s) links', status: 400 },
+          };
+        }
+      }
+    }
+
     // Update project config
     const { data: updatedConfig, error: updateError } = await supabase
       .from('project_configs')
@@ -358,6 +388,12 @@ export const updateProjectConfigBySlug = (
           data.feedback_allow_anon_upvoting !== undefined
             ? data.feedback_allow_anon_upvoting
             : config.feedback_allow_anon_upvoting,
+        feedback_hide_author_names:
+          data.feedback_hide_author_names !== undefined
+            ? data.feedback_hide_author_names
+            : config.feedback_hide_author_names,
+        hub_custom_tabs:
+          hubCustomTabs !== undefined ? hubCustomTabs : config.hub_custom_tabs,
         custom_theme: data.custom_theme !== undefined ? data.custom_theme : config.custom_theme,
         custom_theme_root:
           data.custom_theme_root !== undefined ? data.custom_theme_root : config.custom_theme_root,
@@ -392,7 +428,7 @@ export const updateProjectConfigBySlug = (
       })
       .eq('id', config.id)
       .select(
-        'id, created_at, project_id, changelog_preview_style, changelog_twitter_handle, integration_discord_status, integration_discord_webhook, integration_discord_role_id, custom_domain, custom_domain_verified, integration_sso_status, integration_sso_url, feedback_allow_anon_upvoting, custom_theme, custom_theme_background, custom_theme_border, custom_theme_primary_foreground, custom_theme_root, custom_theme_secondary_background, custom_theme_accent, integration_slack_status, integration_slack_webhook, logo_redirect_url, changelog_enabled'
+        'id, created_at, project_id, changelog_preview_style, changelog_twitter_handle, integration_discord_status, integration_discord_webhook, integration_discord_role_id, custom_domain, custom_domain_verified, integration_sso_status, integration_sso_url, feedback_allow_anon_upvoting, feedback_hide_author_names, hub_custom_tabs, custom_theme, custom_theme_background, custom_theme_border, custom_theme_primary_foreground, custom_theme_root, custom_theme_secondary_background, custom_theme_accent, integration_slack_status, integration_slack_webhook, logo_redirect_url, changelog_enabled'
       );
 
     // Check for errors

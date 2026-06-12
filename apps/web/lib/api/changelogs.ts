@@ -1,6 +1,8 @@
 import { internal_runWithWaitUntil as waitUntil } from 'next/dist/server/web/internal-edge-wait-until';
+import { render } from '@react-email/render';
 import { sendBatchEmails } from '@/emails';
 import ChangelogEmail from '@/emails/changelog-email';
+import { isPlunkConfigured, sendPlunkEmail } from '@/lib/plunk';
 import { decode } from 'base64-arraybuffer';
 import { withProjectAuth } from '@/lib/auth';
 import { ChangelogProps, ChangelogWithAuthorProps, ProfileProps, ProjectProps } from '@/lib/types';
@@ -359,8 +361,41 @@ const sendChangelogEmail = async (
     return resultArray;
   }, []);
 
+  const subject = `${project.name} Update: ${data.title}`;
+
   // Send email to each group
   subscriberGroups.forEach(async (group) => {
+    if (isPlunkConfigured()) {
+      await Promise.all(
+        group.map(async (email) => {
+          const reactEmail = ChangelogEmail({
+            subId: subscribers.find((subscriber) => subscriber.email === email)!.id,
+            projectSlug: project.slug,
+            changelog: {
+              title: data.title,
+              summary: data.summary!,
+              content: data.content!,
+              image: data.image!,
+              publish_date: data.publish_date!,
+              slug: data.slug,
+              author: {
+                full_name: user.full_name,
+                avatar_url: user.avatar_url!,
+              },
+            },
+          });
+
+          await sendPlunkEmail({
+            to: email,
+            subject,
+            body: render(reactEmail),
+          });
+        })
+      );
+
+      return;
+    }
+
     // For each group, create react emails
     const emails = group.map((email) =>
       ChangelogEmail({
@@ -384,7 +419,7 @@ const sendChangelogEmail = async (
     // Send emails
     const { error: emailError } = await sendBatchEmails({
       emails: group,
-      subject: `${project.name} Update: ${data.title}`,
+      subject,
       headers: group.map((email) => ({
         'List-Unsubscribe': formatRootUrl(
           project.slug,
@@ -392,12 +427,12 @@ const sendChangelogEmail = async (
         ),
       })),
       reactEmails: emails,
-    }).then((data) => {
-      if (data.error) {
-        return { data: null, error: { message: data.error.message, status: 500 } };
+    }).then((batchData) => {
+      if (batchData.error) {
+        return { data: null, error: { message: batchData.error.message, status: 500 } };
       }
 
-      return { data, error: null };
+      return { data: batchData, error: null };
     });
 
     // Check for errors

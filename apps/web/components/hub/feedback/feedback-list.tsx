@@ -10,6 +10,7 @@ import { toast } from 'sonner';
 import { Avatar, AvatarFallback, AvatarImage } from 'ui/components/ui/avatar';
 import { PROSE_CN } from '@/lib/constants';
 import { normalizeStatus } from '@/lib/feedback-status';
+import { getPublicAuthorInitial, getPublicAuthorName, getPublicAvatarUrl } from '@/lib/hub-author';
 import { FeedbackWithUserProps, ProjectConfigWithoutSecretProps } from '@/lib/types';
 import AuthModal from '../modals/login-signup-modal';
 import FeedbackStatusBadge from './feedback-status-badge';
@@ -41,6 +42,7 @@ export default function FeedbackList({
   const [feedbackList, setFeedbackList] = useState<FeedbackWithTimeAgo[]>(
     updateFeedbackListWithTimeAgo(feedback)
   );
+  const hideAuthorNames = projectConfig?.feedback_hide_author_names ?? false;
   const searchParams = useSearchParams();
 
   // Query params
@@ -300,11 +302,19 @@ export default function FeedbackList({
             <div className='text-foreground/60 flex select-none flex-row items-center justify-start gap-2 font-light'>
               {/* User */}
               <Avatar className='h-6 w-6 gap-2 border'>
-                <AvatarImage src={feedback.user.avatar_url || ''} alt={feedback.user.full_name} />
-                <AvatarFallback className='text-xs font-light'>{feedback.user.full_name[0]}</AvatarFallback>
+                <AvatarImage
+                  src={getPublicAvatarUrl(feedback.user.avatar_url, hideAuthorNames)}
+                  alt={getPublicAuthorName(feedback.user.full_name, hideAuthorNames)}
+                />
+                <AvatarFallback className='text-xs font-light'>
+                  {getPublicAuthorInitial(feedback.user.full_name, hideAuthorNames)}
+                </AvatarFallback>
               </Avatar>
               {/* Name */}
-              <span className='text-foreground/70 text-sm font-extralight'>{feedback.user.full_name}</span>·
+              <span className='text-foreground/70 text-sm font-extralight'>
+                {getPublicAuthorName(feedback.user.full_name, hideAuthorNames)}
+              </span>
+              ·
               {/* Time ago */}
               <span className='text-foreground/50 text-xs font-extralight'>{feedback.timeAgo}</span>
             </div>

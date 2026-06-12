@@ -14,6 +14,7 @@ import AuthModal from './modals/login-signup-modal';
 interface TabProps {
   name: string;
   link: string;
+  external?: boolean;
 }
 
 export default function Header({
@@ -34,9 +35,9 @@ export default function Header({
 
   // check for tab change
   useEffect(() => {
-    const currentTab = tabs.find((tab) => tab.link === pathname);
-    if (currentTab) {
-      setCurrentTab(currentTab);
+    const activeTab = tabs.find((tab) => !tab.external && tab.link === pathname);
+    if (activeTab) {
+      setCurrentTab(activeTab);
     }
   }, [pathname, tabs]);
 
@@ -96,25 +97,37 @@ export default function Header({
 
       {/* Navigation */}
       <div className='flex h-fit w-full flex-row items-center gap-4'>
-        {tabs.map((tab) => (
-          <Link
-            href={tab.link}
-            className={cn(
-              'pb-[6px] first:-ml-3',
-              tab.link === currentTab.link && 'border-foreground border-b-2'
-            )}
-            key={tab.name.toLowerCase()}>
+        {tabs.map((tab) => {
+          const isActive = !tab.external && tab.link === currentTab.link;
+          const button = (
             <Button
               variant='secondary'
               size='sm'
               className={cn(
-                'text-foreground/90 hover:bg-foreground/10 inline-flex items-center rounded-md px-3 py-1 text-base font-light transition-colors duration-150',
-                tab.link === currentTab.link && ''
+                'text-foreground/90 hover:bg-foreground/10 inline-flex items-center rounded-md px-3 py-1 text-base font-light transition-colors duration-150'
               )}>
               {tab.name}
             </Button>
-          </Link>
-        ))}
+          );
+
+          return tab.external ? (
+            <a
+              href={tab.link}
+              target='_blank'
+              rel='noopener noreferrer'
+              className='pb-[6px] first:-ml-3'
+              key={tab.name.toLowerCase()}>
+              {button}
+            </a>
+          ) : (
+            <Link
+              href={tab.link}
+              className={cn('pb-[6px] first:-ml-3', isActive && 'border-foreground border-b-2')}
+              key={tab.name.toLowerCase()}>
+              {button}
+            </Link>
+          );
+        })}
       </div>
     </div>
   );

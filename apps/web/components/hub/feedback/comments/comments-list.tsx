@@ -19,11 +19,13 @@ export default function CommentsList({
   projectSlug,
   feedbackId,
   user,
+  hideAuthorNames = false,
 }: {
   feedbackComments: FeedbackCommentWithUserProps[] | null;
   projectSlug: string;
   feedbackId: string;
   user: ProfileProps['Row'] | null;
+  hideAuthorNames?: boolean;
 }) {
   const [commentContent, setCommentContent] = useState<string>('');
   const [totalCommentsAndReplies, setTotalCommentsAndReplies] = useState<number | null>(null);
@@ -98,12 +100,18 @@ export default function CommentsList({
   const renderComments = useCallback(
     (comments: FeedbackCommentWithUserProps[] | undefined) => {
       return comments?.map((comment: FeedbackCommentWithUserProps) => (
-        <Comment commentData={comment} projectSlug={projectSlug} user={user} key={comment.id} id={comment.id}>
+        <Comment
+          commentData={comment}
+          projectSlug={projectSlug}
+          user={user}
+          hideAuthorNames={hideAuthorNames}
+          key={comment.id}
+          id={comment.id}>
           {renderComments(comment.replies)} {/* Recursive call for replies */}
         </Comment>
       ));
     },
-    [projectSlug, user]
+    [hideAuthorNames, projectSlug, user]
   );
 
   // Calculate total comments and replies

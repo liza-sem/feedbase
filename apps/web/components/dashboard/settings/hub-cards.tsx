@@ -4,13 +4,14 @@ import { useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Label } from '@radix-ui/react-label';
 import { cn } from '@ui/lib/utils';
-import { Check, Download, Pen } from 'lucide-react';
+import { Check, Download, Pen, Plus, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from 'ui/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from 'ui/components/ui/card';
 import { Input } from 'ui/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from 'ui/components/ui/select';
 import { Switch } from 'ui/components/ui/switch';
+import { HubCustomTab, parseHubCustomTabs } from '@/lib/hub-tabs';
 import { ProjectConfigWithoutSecretProps, ProjectProps } from '@/lib/types';
 import FileDrop from '@/components/shared/file-drop';
 import CustomizeThemeModal from '../modals/add-custom-theme-modal';
@@ -23,7 +24,14 @@ export default function HubConfigCards({
   projectConfigData: ProjectConfigWithoutSecretProps;
 }) {
   const [project, setProject] = useState<ProjectProps['Row']>(projectData);
-  const [projectConfig, setProjectConfig] = useState<ProjectConfigWithoutSecretProps>(projectConfigData);
+  const [projectConfig, setProjectConfig] = useState<ProjectConfigWithoutSecretProps>({
+    ...projectConfigData,
+    hub_custom_tabs: parseHubCustomTabs(projectConfigData.hub_custom_tabs),
+  });
+
+  function customTabsChanged(current: unknown, original: unknown) {
+    return JSON.stringify(parseHubCustomTabs(current)) !== JSON.stringify(parseHubCustomTabs(original));
+  }
   const [OGImage, setOGImage] = useState<string | null>(projectData.og_image || null);
   const router = useRouter();
 
@@ -91,6 +99,13 @@ export default function HubConfigCards({
             projectConfig.feedback_allow_anon_upvoting !== projectConfigData.feedback_allow_anon_upvoting
               ? projectConfig.feedback_allow_anon_upvoting
               : undefined,
+          feedback_hide_author_names:
+            projectConfig.feedback_hide_author_names !== projectConfigData.feedback_hide_author_names
+              ? projectConfig.feedback_hide_author_names
+              : undefined,
+          hub_custom_tabs: customTabsChanged(projectConfig.hub_custom_tabs, projectConfigData.hub_custom_tabs)
+            ? parseHubCustomTabs(projectConfig.hub_custom_tabs)
+            : undefined,
           custom_theme:
             projectConfig.custom_theme !== projectConfigData.custom_theme
               ? projectConfig.custom_theme
@@ -543,6 +558,77 @@ export default function HubConfigCards({
         </CardFooter>
       </Card>
 
+      {/* Hub navigation */}
+      <Card className='flex w-full flex-col'>
+        <CardHeader>
+          <CardTitle>Hub Navigation</CardTitle>
+          <CardDescription>Add extra links to your public hub tabs.</CardDescription>
+        </CardHeader>
+        <CardContent className='flex flex-col space-y-4'>
+          {parseHubCustomTabs(projectConfig.hub_custom_tabs).map((tab, index) => (
+            <div className='flex flex-col gap-2 sm:flex-row' key={`${tab.name}-${tab.url}-${index}`}>
+              <Input
+                placeholder='Tab name'
+                value={tab.name}
+                className='sm:max-w-[180px]'
+                onChange={(event) => {
+                  const nextTabs = [...parseHubCustomTabs(projectConfig.hub_custom_tabs)];
+                  nextTabs[index] = { ...nextTabs[index], name: event.target.value };
+                  setProjectConfig((prev) => ({ ...prev, hub_custom_tabs: nextTabs }));
+                }}
+              />
+              <Input
+                placeholder='https://docs.example.com'
+                value={tab.url}
+                onChange={(event) => {
+                  const nextTabs = [...parseHubCustomTabs(projectConfig.hub_custom_tabs)];
+                  nextTabs[index] = { ...nextTabs[index], url: event.target.value };
+                  setProjectConfig((prev) => ({ ...prev, hub_custom_tabs: nextTabs }));
+                }}
+              />
+              <Button
+                type='button'
+                variant='outline'
+                size='icon'
+                onClick={() => {
+                  const nextTabs = parseHubCustomTabs(projectConfig.hub_custom_tabs).filter(
+                    (_, tabIndex) => tabIndex !== index
+                  );
+                  setProjectConfig((prev) => ({ ...prev, hub_custom_tabs: nextTabs }));
+                }}>
+                <Trash2 className='h-4 w-4' />
+              </Button>
+            </div>
+          ))}
+          <Button
+            type='button'
+            variant='outline'
+            className='w-fit'
+            disabled={parseHubCustomTabs(projectConfig.hub_custom_tabs).length >= 8}
+            onClick={() => {
+              const nextTabs: HubCustomTab[] = [
+                ...parseHubCustomTabs(projectConfig.hub_custom_tabs),
+                { name: '', url: '' },
+              ];
+              setProjectConfig((prev) => ({ ...prev, hub_custom_tabs: nextTabs }));
+            }}>
+            <Plus className='mr-2 h-4 w-4' />
+            Add tab link
+          </Button>
+          <Label className='text-foreground/50 text-xs font-extralight'>
+            Custom tabs open in a new window. Use full https:// URLs.
+          </Label>
+        </CardContent>
+        <CardFooter>
+          <Button
+            className='w-32'
+            disabled={!customTabsChanged(projectConfig.hub_custom_tabs, projectConfigData.hub_custom_tabs)}
+            onClick={handleSaveProjectConfig}>
+            Save changes
+          </Button>
+        </CardFooter>
+      </Card>
+
       {/* Feedback */}
       <Card className='flex w-full flex-col '>
         <CardHeader>
@@ -550,6 +636,32 @@ export default function HubConfigCards({
           <CardDescription>Configure your project&apos;s feedback.</CardDescription>
         </CardHeader>
         <CardContent className='flex flex-col space-y-4'>
+          {/* Hide author names */}
+          <div className='space-y-1'>
+            <Label className='text-foreground/70 text-sm font-light'>Hide author names</Label>
+            <div className='flex h-10 w-full flex-row space-x-2'>
+              <Select
+                defaultValue={projectConfig.feedback_hide_author_names ? 'true' : 'false'}
+                onValueChange={(value) => {
+                  setProjectConfig((prev) => ({
+                    ...prev,
+                    feedback_hide_author_names: value === 'true',
+                  }));
+                }}>
+                <SelectTrigger className='max-w-xs text-sm font-extralight'>
+                  <SelectValue placeholder='Select an option' />
+                </SelectTrigger>
+                <SelectContent className='font-light'>
+                  <SelectItem value='true'>Enabled</SelectItem>
+                  <SelectItem value='false'>Disabled</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <Label className='text-foreground/50 text-xs font-extralight'>
+              Show &quot;Anonymous&quot; instead of user names on the public hub.
+            </Label>
+          </div>
+
           {/* Anonymous Feedback */}
           <div className='space-y-1'>
             <Label className='text-foreground/70 text-sm font-light'>Anonymous Feedback Upvoting</Label>
@@ -579,8 +691,8 @@ export default function HubConfigCards({
           <Button
             className='w-32'
             disabled={
-              // If the values are the same as the ones in the database or if they are empty
-              projectConfig.feedback_allow_anon_upvoting === projectConfigData.feedback_allow_anon_upvoting
+              projectConfig.feedback_allow_anon_upvoting === projectConfigData.feedback_allow_anon_upvoting &&
+              projectConfig.feedback_hide_author_names === projectConfigData.feedback_hide_author_names
             }
             onClick={handleSaveProjectConfig}>
             Save changes

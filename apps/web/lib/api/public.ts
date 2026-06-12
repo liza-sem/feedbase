@@ -155,6 +155,17 @@ export const subscribeToProjectChangelogs = (projectSlug: string, email: string)
       return { data: null, error: { message: subscriberError.message, status: 500 } };
     }
 
+    try {
+      const { syncPlunkSubscriber } = await import('@/lib/plunk');
+      await syncPlunkSubscriber({
+        email,
+        projectSlug: project!.slug,
+        subscribed: true,
+      });
+    } catch {
+      // Plunk sync is optional and should not block local subscription.
+    }
+
     // Return subscriber
     return { data: subscriber, error: null };
   })(projectSlug, 'server', true, false);
@@ -189,6 +200,17 @@ export const unsubscribeFromProjectChangelogs = (projectSlug: string, subId: str
     // Check for errors
     if (deleteError) {
       return { data: null, error: { message: deleteError.message, status: 500 } };
+    }
+
+    try {
+      const { syncPlunkSubscriber } = await import('@/lib/plunk');
+      await syncPlunkSubscriber({
+        email: existingSubscriber.email,
+        projectSlug: project!.slug,
+        subscribed: false,
+      });
+    } catch {
+      // Plunk sync is optional and should not block local unsubscribe.
     }
 
     // Return success

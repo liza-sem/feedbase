@@ -4,6 +4,7 @@ import { notFound, redirect } from 'next/navigation';
 import { Separator } from 'ui/components/ui/separator';
 import { getProjectBySlug, getProjectConfigBySlug } from '@/lib/api/projects';
 import { getCurrentUser } from '@/lib/api/user';
+import { buildHubTabs, parseHubCustomTabs } from '@/lib/hub-tabs';
 import Header from '@/components/hub/nav-bar';
 import CustomThemeWrapper from '@/components/hub/theme-wrapper';
 import { ThemeProvider as NextThemeProvider } from '@/components/theme-provider';
@@ -40,20 +41,6 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   };
 }
 
-function getHubTabs(changelogEnabled: boolean) {
-  const tabs = [
-    { name: 'Feedback', link: '/feedback' },
-    { name: 'Roadmap', link: '/roadmap' },
-    { name: 'Changelog', link: '/changelog' },
-  ];
-
-  if (!changelogEnabled) {
-    return tabs.filter((tab) => tab.link !== '/changelog');
-  }
-
-  return tabs;
-}
-
 export default async function HubLayout({ children, params }: Props) {
   const headerList = headers();
   const pathname = headerList.get('x-pathname');
@@ -73,8 +60,8 @@ export default async function HubLayout({ children, params }: Props) {
     notFound();
   }
 
-  const tabs = getHubTabs(config.changelog_enabled);
-  const currentTab = tabs.find((tab) => tab.link === `/${pathname!.split('/')[1]}`);
+  const tabs = buildHubTabs(config.changelog_enabled, parseHubCustomTabs(config.hub_custom_tabs));
+  const currentTab = tabs.find((tab) => !tab.external && tab.link === `/${pathname!.split('/')[1]}`);
 
   if (!currentTab) {
     redirect('/feedback');
