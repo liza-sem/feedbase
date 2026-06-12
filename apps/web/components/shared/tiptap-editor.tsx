@@ -10,7 +10,7 @@ import { Typography } from '@tiptap/extension-typography';
 import { AnyExtension, EditorContent, type Editor, useEditor } from '@tiptap/react';
 import { StarterKit } from '@tiptap/starter-kit';
 import { cn } from '@ui/lib/utils';
-import { Bold, Heading1, Heading2, Heading3, Italic, Link2, List, ListOrdered } from 'lucide-react';
+import { Bold, Italic, Link2, List, ListOrdered } from 'lucide-react';
 import { Button } from 'ui/components/ui/button';
 
 function runEditorCommand(editor: Editor, command: string, attrs?: Record<string, string | number>) {
@@ -19,11 +19,7 @@ function runEditorCommand(editor: Editor, command: string, attrs?: Record<string
   commands[command]?.(attrs);
 }
 
-const HEADING_LEVELS = [
-  { level: 1, icon: Heading1 },
-  { level: 2, icon: Heading2 },
-  { level: 3, icon: Heading3 },
-] as const;
+const HEADING_LEVELS = [1, 2, 3] as const;
 
 function EditorToolbar({ editor }: { editor: Editor }) {
   return (
@@ -48,17 +44,18 @@ function EditorToolbar({ editor }: { editor: Editor }) {
         }}>
         <Italic className='h-4 w-4' />
       </Button>
-      {HEADING_LEVELS.map(({ level, icon: Icon }) => (
+      <div aria-hidden className='bg-border/60 mx-0.5 h-5 w-px' />
+      {HEADING_LEVELS.map((level) => (
         <Button
           key={level}
           type='button'
           size='sm'
           variant={editor.isActive('heading', { level }) ? 'secondary' : 'ghost'}
-          className='h-8 w-8 p-0'
+          className='h-8 min-w-8 px-2 text-xs font-semibold'
           onClick={() => {
             runEditorCommand(editor, 'toggleHeading', { level });
           }}>
-          <Icon className='h-4 w-4' />
+          H{level}
         </Button>
       ))}
       <Button
