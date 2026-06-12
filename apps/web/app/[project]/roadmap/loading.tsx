@@ -6,8 +6,8 @@ export default function RoadmapLoading() {
       <Skeleton className='h-10 w-48' />
       <Skeleton className='h-5 w-96' />
       <div className='grid grid-cols-1 gap-4 md:grid-cols-3'>
-        {Array.from({ length: 3 }).map((_, index) => (
-          <Skeleton key={index} className='h-80 w-full' />
+        {['planned', 'progress', 'completed'].map((id) => (
+          <Skeleton key={id} className='h-80 w-full' />
         ))}
       </div>
     </div>

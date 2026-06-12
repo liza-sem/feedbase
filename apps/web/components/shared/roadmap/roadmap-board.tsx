@@ -122,7 +122,9 @@ export default function RoadmapBoard({
                     <Card
                       key={item.id}
                       draggable={editable}
-                      onDragStart={() => editable && setDraggingId(item.id)}
+                      onDragStart={() => {
+                        if (editable) setDraggingId(item.id);
+                      }}
                       onDragEnd={() => {
                         setDraggingId(null);
                         setActiveDropColumn(null);
