@@ -11,7 +11,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Input } from 'ui/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from 'ui/components/ui/select';
 import { Switch } from 'ui/components/ui/switch';
-import { HubCustomTab, parseHubCustomTabs } from '@/lib/hub-tabs';
+import { HubCustomTab, parseHubCustomTabs, parseHubCustomTabsDraft } from '@/lib/hub-tabs';
 import { ProjectConfigWithoutSecretProps, ProjectProps } from '@/lib/types';
 import FileDrop from '@/components/shared/file-drop';
 import CustomizeThemeModal from '../modals/add-custom-theme-modal';
@@ -34,7 +34,7 @@ export default function HubConfigCards({
     feedback_hide_author_names: Boolean(
       (projectConfigData as Record<string, unknown>).feedback_hide_author_names
     ),
-    hub_custom_tabs: parseHubCustomTabs((projectConfigData as Record<string, unknown>).hub_custom_tabs),
+    hub_custom_tabs: parseHubCustomTabsDraft((projectConfigData as Record<string, unknown>).hub_custom_tabs),
   }));
 
   function customTabsChanged(current: unknown, original: unknown) {
@@ -581,14 +581,14 @@ export default function HubConfigCards({
           <CardDescription>Add extra links to your public hub tabs.</CardDescription>
         </CardHeader>
         <CardContent className='flex flex-col space-y-4'>
-          {parseHubCustomTabs(projectConfig.hub_custom_tabs).map((tab, index) => (
-            <div className='flex flex-col gap-2 sm:flex-row' key={`${tab.name}-${tab.url}-${index}`}>
+          {projectConfig.hub_custom_tabs.map((tab, index) => (
+            <div className='flex flex-col gap-2 sm:flex-row' key={`custom-tab-${index}`}>
               <Input
                 placeholder='Tab name'
                 value={tab.name}
                 className='sm:max-w-[180px]'
                 onChange={(event) => {
-                  const nextTabs = [...parseHubCustomTabs(projectConfig.hub_custom_tabs)];
+                  const nextTabs = [...projectConfig.hub_custom_tabs];
                   nextTabs[index] = { ...nextTabs[index], name: event.target.value };
                   setProjectConfig((prev) => ({ ...prev, hub_custom_tabs: nextTabs }));
                 }}
@@ -597,7 +597,7 @@ export default function HubConfigCards({
                 placeholder='https://docs.example.com'
                 value={tab.url}
                 onChange={(event) => {
-                  const nextTabs = [...parseHubCustomTabs(projectConfig.hub_custom_tabs)];
+                  const nextTabs = [...projectConfig.hub_custom_tabs];
                   nextTabs[index] = { ...nextTabs[index], url: event.target.value };
                   setProjectConfig((prev) => ({ ...prev, hub_custom_tabs: nextTabs }));
                 }}
@@ -607,9 +607,7 @@ export default function HubConfigCards({
                 variant='outline'
                 size='icon'
                 onClick={() => {
-                  const nextTabs = parseHubCustomTabs(projectConfig.hub_custom_tabs).filter(
-                    (_, tabIndex) => tabIndex !== index
-                  );
+                  const nextTabs = projectConfig.hub_custom_tabs.filter((_, tabIndex) => tabIndex !== index);
                   setProjectConfig((prev) => ({ ...prev, hub_custom_tabs: nextTabs }));
                 }}>
                 <Trash2 className='h-4 w-4' />
@@ -620,13 +618,12 @@ export default function HubConfigCards({
             type='button'
             variant='outline'
             className='w-fit'
-            disabled={parseHubCustomTabs(projectConfig.hub_custom_tabs).length >= 8}
+            disabled={projectConfig.hub_custom_tabs.length >= 8}
             onClick={() => {
-              const nextTabs: HubCustomTab[] = [
-                ...parseHubCustomTabs(projectConfig.hub_custom_tabs),
-                { name: '', url: '' },
-              ];
-              setProjectConfig((prev) => ({ ...prev, hub_custom_tabs: nextTabs }));
+              setProjectConfig((prev) => ({
+                ...prev,
+                hub_custom_tabs: [...prev.hub_custom_tabs, { name: '', url: '' }],
+              }));
             }}>
             <Plus className='mr-2 h-4 w-4' />
             Add tab link
