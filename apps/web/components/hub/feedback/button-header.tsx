@@ -8,6 +8,7 @@ import { cn } from '@ui/lib/utils';
 import { Clock3, Flame, Search, Star } from 'lucide-react';
 import useCreateQueryString from '@/lib/hooks/use-create-query';
 import { ProjectConfigWithoutSecretProps } from '@/lib/types';
+import { StatusCombobox } from '@/components/dashboard/feedback/status-combobox';
 import CreatePostModal from '../modals/create-post-modal';
 import AuthModal from '../modals/login-signup-modal';
 
@@ -27,6 +28,7 @@ export default function FeedbackHeader({
 
   // Query params
   const sort = searchParams.get('sort') || '';
+  const status = searchParams.get('status') || '';
 
   const [currentSort, setCurrentSort] = useState<string>(sort);
 
@@ -83,6 +85,15 @@ export default function FeedbackHeader({
             <Star className='mr-1 h-4 w-4' />
             Top
           </Button>
+
+          <StatusCombobox
+            initialValue={status}
+            align='start'
+            triggerClassName='bg-secondary/30 h-9'
+            onSelect={(value) => {
+              router.push(`${pathname}?${createQueryString('status', value)}`);
+            }}
+          />
         </div>
 
         <div className='flex w-full flex-row items-center justify-start gap-2 md:w-fit'>

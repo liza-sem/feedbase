@@ -9,8 +9,10 @@ import { ChevronUp, MessagesSquare } from 'lucide-react';
 import { toast } from 'sonner';
 import { Avatar, AvatarFallback, AvatarImage } from 'ui/components/ui/avatar';
 import { PROSE_CN } from '@/lib/constants';
+import { normalizeStatus } from '@/lib/feedback-status';
 import { FeedbackWithUserProps, ProjectConfigWithoutSecretProps } from '@/lib/types';
 import AuthModal from '../modals/login-signup-modal';
+import FeedbackStatusBadge from './feedback-status-badge';
 
 interface FeedbackWithTimeAgo extends FeedbackWithUserProps {
   timeAgo: string;
@@ -44,11 +46,14 @@ export default function FeedbackList({
   // Query params
   const sort = searchParams.get('sort') || '';
   const search = searchParams.get('search') || '';
+  const status = searchParams.get('status') || '';
 
   // Filter feedback by query params if they exist
   const filteredFeedback = feedbackList.filter((feedback) => {
     // Filter by search
     if (search && !feedback.title.toLowerCase().includes(search.toLowerCase())) return false;
+
+    if (status && normalizeStatus(feedback.status) !== normalizeStatus(status)) return false;
 
     return true;
   });
@@ -277,7 +282,8 @@ export default function FeedbackList({
           <Link
             href={`/feedback/${feedback.id}`}
             className='flex flex-grow flex-col items-start justify-between gap-3 p-4'>
-            <div className='flex flex-col gap-1'>
+            <div className='flex flex-col gap-2'>
+              {feedback.status ? <FeedbackStatusBadge status={feedback.status} /> : null}
               {/* Title */}
               <span className='text-foreground/90 line-clamp-2 pr-10 text-sm font-medium'>
                 {feedback.title}

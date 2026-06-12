@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   ResponsiveDialog,
   ResponsiveDialogContent,
@@ -23,6 +23,11 @@ export default function AuthModal({
   disabled?: boolean;
 }) {
   const [authType, setAuthType] = useState<'sign-in' | 'sign-up'>('sign-in');
+  const [successRedirect, setSuccessRedirect] = useState('');
+
+  useEffect(() => {
+    setSuccessRedirect(window.location.href);
+  }, []);
 
   return (
     <ResponsiveDialog open={disabled ? false : undefined}>
@@ -31,7 +36,7 @@ export default function AuthModal({
         <ResponsiveDialogHeader className='flex flex-col items-center space-y-2'>
           <ResponsiveDialogTitle>{authType === 'sign-in' ? 'Sign In' : 'Sign Up'}</ResponsiveDialogTitle>
           <ResponsiveDialogDescription className='text-center'>
-            {authType === 'sign-in' ? 'Sign in' : 'Sign up'} with your email address to continue.
+            {authType === 'sign-in' ? 'Sign in' : 'Sign up'} with Google or your email to continue.
           </ResponsiveDialogDescription>
         </ResponsiveDialogHeader>
         <Tabs
@@ -45,10 +50,18 @@ export default function AuthModal({
           </TabsList>
           <Separator className='bg-border my-4' />
           <TabsContent value='sign-in'>
-            <UserAuthForm authType='sign-in' buttonsClassname='bg-secondary/30 border-border/50' />
+            <UserAuthForm
+              authType='sign-in'
+              successRedirect={successRedirect}
+              buttonsClassname='bg-secondary/30 border-border/50'
+            />
           </TabsContent>
           <TabsContent value='sign-up'>
-            <UserAuthForm authType='sign-up' buttonsClassname='bg-secondary/30 border-border/50' />
+            <UserAuthForm
+              authType='sign-up'
+              successRedirect={successRedirect}
+              buttonsClassname='bg-secondary/30 border-border/50'
+            />
           </TabsContent>
         </Tabs>
       </ResponsiveDialogContent>

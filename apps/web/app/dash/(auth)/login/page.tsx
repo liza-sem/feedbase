@@ -42,7 +42,7 @@ export default async function SignIn() {
         <CardHeader className='flex flex-col items-center space-y-2'>
           <CardTitle>Sign In</CardTitle>
           <CardDescription className='text-center'>
-            Sign in with your email address to continue.
+            Sign in with Google or your email to continue.
           </CardDescription>
         </CardHeader>
         <CardContent className='px-2'>

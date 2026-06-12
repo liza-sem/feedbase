@@ -107,12 +107,16 @@ export default function CreatePostModal({
             </div>
 
             <div className='bg-secondary/30 focus-within:ring-ring ring-offset-root flex w-full flex-col items-center justify-end rounded-sm border p-4 transition-shadow duration-200 focus-within:ring-2 focus-within:ring-offset-1'>
-              {/* Editable Comment div with placeholder */}
-              <PostEditor content={content} setContent={setContent} className='min-h-[50px]' />
+              <PostEditor
+                content={content}
+                setContent={setContent}
+                className='min-h-[120px] w-full'
+                showToolbar
+              />
             </div>
 
             <Label className='text-foreground/50 text-xs font-extralight'>
-              You can use Markdown to format your post.
+              Use the toolbar for formatting. Links, lists, and emphasis are supported.
             </Label>
           </div>
         </div>

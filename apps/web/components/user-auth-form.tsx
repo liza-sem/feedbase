@@ -12,30 +12,27 @@ export function UserAuthForm({
   authType,
   successRedirect,
   buttonsClassname,
+  showGoogle = true,
   showGitHub = false,
 }: {
   authType: 'sign-in' | 'sign-up';
   successRedirect?: string;
   buttonsClassname?: string;
+  showGoogle?: boolean;
   showGitHub?: boolean;
 }) {
   const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [provider, setProvider] = useState<'github' | 'email'>('github');
+  const [provider, setProvider] = useState<'google' | 'github' | 'email'>('email');
   const [name, setName] = useState<string>('');
   const [email, setEmail] = useState<string>('');
-  // TODO: Figure out issue with cookieOptions setting and set at root level instead of individually like rn
-  // {
-  //   cookieOptions: {
-  //     path: '/',
-  //     domain: 'localhost',
-  //     sameSite: 'lax',
-  //     secure: false,
-  //   }
-  // }
   const supabase = createBrowserClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
   );
+
+  function getRedirectUrl() {
+    return successRedirect || `${location.origin}${location.pathname}`;
+  }
 
   async function handleMailSignIn(event: React.SyntheticEvent) {
     setIsLoading(true);
@@ -70,9 +67,7 @@ export function UserAuthForm({
       email,
       options: {
         shouldCreateUser: authType === 'sign-up',
-        emailRedirectTo: `${location.origin}/auth/callback?successRedirect=${
-          successRedirect || location.origin
-        }`,
+        emailRedirectTo: `${location.origin}/auth/callback?successRedirect=${getRedirectUrl()}`,
         data: {
           full_name: name || user?.full_name,
         },
@@ -88,26 +83,69 @@ export function UserAuthForm({
     setIsLoading(false);
   }
 
-  async function handleGitHubSignIn(event: React.SyntheticEvent) {
+  async function handleOAuthSignIn(oauthProvider: 'google' | 'github') {
     setIsLoading(true);
-
-    event.preventDefault();
-    setProvider('github');
+    setProvider(oauthProvider);
 
     const { error } = await supabase.auth.signInWithOAuth({
-      provider: 'github',
+      provider: oauthProvider,
       options: {
-        redirectTo: `${location.origin}/auth/callback?successRedirect=${successRedirect || location.origin}`,
+        redirectTo: `${location.origin}/auth/callback?successRedirect=${getRedirectUrl()}`,
       },
     });
 
     if (error) {
       toast.error(error.message);
+      setIsLoading(false);
     }
   }
 
+  const showOAuth = showGoogle || showGitHub;
+
   return (
     <div className='grid gap-4'>
+      {showOAuth ? (
+        <>
+          {showGoogle ? (
+            <Button
+              variant='outline'
+              type='button'
+              disabled={isLoading}
+              onClick={() => handleOAuthSignIn('google')}
+              className={buttonsClassname}>
+              {isLoading && provider === 'google' ? (
+                <Icons.Spinner className='mr-2 h-4 w-4 animate-spin' />
+              ) : (
+                <Icons.Google className='mr-2 h-4 w-4' />
+              )}
+              Continue with Google
+            </Button>
+          ) : null}
+          {showGitHub ? (
+            <Button
+              variant='outline'
+              type='button'
+              disabled={isLoading}
+              onClick={() => handleOAuthSignIn('github')}
+              className={buttonsClassname}>
+              {isLoading && provider === 'github' ? (
+                <Icons.Spinner className='mr-2 h-4 w-4 animate-spin' />
+              ) : (
+                <Icons.Github className='mr-2 h-4 w-4' />
+              )}
+              Continue with GitHub
+            </Button>
+          ) : null}
+          <div className='relative'>
+            <div className='absolute inset-0 flex items-center'>
+              <span className='w-full border-t' />
+            </div>
+            <div className='relative flex justify-center text-xs uppercase'>
+              <span className='bg-root text-muted-foreground px-2'>Or continue with email</span>
+            </div>
+          </div>
+        </>
+      ) : null}
       <form onSubmit={handleMailSignIn}>
         <div className='grid gap-3'>
           <div className='gap- grid gap-2'>
@@ -157,31 +195,6 @@ export function UserAuthForm({
           </Button>
         </div>
       </form>
-      {showGitHub ? (
-        <>
-          <div className='relative'>
-            <div className='absolute inset-0 flex items-center'>
-              <span className='w-full border-t' />
-            </div>
-            <div className='relative flex justify-center text-xs uppercase'>
-              <span className='bg-root text-muted-foreground px-2'>Or continue with</span>
-            </div>
-          </div>
-          <Button
-            variant='outline'
-            type='button'
-            disabled={isLoading}
-            onClick={handleGitHubSignIn}
-            className={buttonsClassname}>
-            {isLoading && provider === 'github' ? (
-              <Icons.Spinner className='mr-2 h-4 w-4 animate-spin' />
-            ) : (
-              <Icons.Github className='mr-2 h-4 w-4' />
-            )}{' '}
-            Github
-          </Button>
-        </>
-      ) : null}
     </div>
   );
 }
