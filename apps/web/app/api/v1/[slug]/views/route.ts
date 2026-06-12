@@ -12,9 +12,9 @@ import { recordClick } from '@/lib/tinybird';
 export async function POST(req: NextRequest, context: { params: { slug: string } }) {
   const { feedbackId, changelogId } = await req.json();
 
-  // Check for Tinybird env vars
+  // Analytics is optional when Tinybird is not configured (common for self-hosted).
   if (!process.env.TINYBIRD_API_URL || !process.env.TINYBIRD_API_KEY) {
-    return NextResponse.json({ error: 'Tinybird environment variables not set' }, { status: 500 });
+    return NextResponse.json({ data: null, skipped: true }, { status: 200 });
   }
 
   const data = await recordClick({

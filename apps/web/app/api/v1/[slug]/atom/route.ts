@@ -26,6 +26,9 @@ export async function GET(req: Request, context: { params: { slug: string } }) {
     return NextResponse.json({ error: changelogError.message }, { status: changelogError.status });
   }
 
+  const latestUpdated =
+    changelogs.length > 0 ? changelogs[0].publish_date : new Date().toISOString();
+
   // Return atom formatted changelogs
   return new Response(
     `<?xml version="1.0" encoding="utf-8"?>
@@ -34,7 +37,7 @@ export async function GET(req: Request, context: { params: { slug: string } }) {
     <subtitle>${project.name}'s Changelog</subtitle>
     <link href="${req.url}" rel="self"/>
     <link href="${process.env.NEXT_PUBLIC_ROOT_DOMAIN}"/>
-    <updated>${changelogs[0].publish_date}</updated>
+    <updated>${latestUpdated}</updated>
     <id>${project.id}</id>${changelogs
       .map((post) => {
         return `

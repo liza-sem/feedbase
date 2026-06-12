@@ -3,17 +3,13 @@ import { notFound } from 'next/navigation';
 import { Separator } from '@ui/components/ui/separator';
 import { getProjectBySlug } from '@/lib/api/projects';
 import { getPublicProjectFeedback } from '@/lib/api/public';
-import { ALL_STATUS_OPTIONS, PUBLIC_ROADMAP_STATUSES, normalizeStatus } from '@/lib/feedback-status';
+import { PUBLIC_ROADMAP_STATUSES, normalizeStatus } from '@/lib/feedback-status';
 import AnalyticsWrapper from '@/components/hub/analytics-wrapper';
 import RoadmapBoard from '@/components/shared/roadmap/roadmap-board';
 
 type Props = {
   params: { project: string };
 };
-
-const publicColumns = ALL_STATUS_OPTIONS.filter((option) =>
-  PUBLIC_ROADMAP_STATUSES.includes(option.value)
-);
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { data: project, error } = await getProjectBySlug(params.project, 'server', true, false);
@@ -61,7 +57,7 @@ export default async function RoadmapPage({ params }: Props) {
           <RoadmapBoard
             feedback={roadmapFeedback}
             projectSlug={params.project}
-            columns={publicColumns}
+            columnStatuses={PUBLIC_ROADMAP_STATUSES}
             emptyMessage='Nothing here yet.'
           />
         )}

@@ -3,7 +3,7 @@
 import * as React from 'react';
 import { cn } from '@ui/lib/utils';
 import { Check, ChevronDown } from 'lucide-react';
-import { ALL_STATUS_OPTIONS } from '@/lib/feedback-status';
+import { ALL_STATUS_OPTIONS } from '@/lib/feedback-status-icons';
 import { Button } from 'ui/components/ui/button';
 import { Command, CommandGroup, CommandItem } from 'ui/components/ui/command';
 import { Popover, PopoverContent, PopoverTrigger } from 'ui/components/ui/popover';

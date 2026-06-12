@@ -6,20 +6,16 @@ import { cn } from '@ui/lib/utils';
 import { ChevronUp } from 'lucide-react';
 import { toast } from 'sonner';
 import { Card, CardContent, CardHeader, CardTitle } from 'ui/components/ui/card';
-import {
-  ALL_STATUS_OPTIONS,
-  type FeedbackStatus,
-  type StatusOption,
-  groupFeedbackByStatus,
-  normalizeStatus,
-} from '@/lib/feedback-status';
+import { groupFeedbackByStatus, normalizeStatus, type FeedbackStatus } from '@/lib/feedback-status';
+import { ALL_STATUS_OPTIONS, type StatusOption } from '@/lib/feedback-status-icons';
 import { FeedbackTagProps, FeedbackWithUserProps } from '@/lib/types';
 import FeedbackModal from '@/components/dashboard/modals/view-feedback-modal';
 
 export default function RoadmapBoard({
   feedback,
   projectSlug,
-  columns = ALL_STATUS_OPTIONS,
+  columns,
+  columnStatuses,
   editable = false,
   tags = [],
   emptyMessage = 'No items in this column yet.',
@@ -27,10 +23,16 @@ export default function RoadmapBoard({
   feedback: FeedbackWithUserProps[];
   projectSlug: string;
   columns?: StatusOption[];
+  columnStatuses?: FeedbackStatus[];
   editable?: boolean;
   tags?: FeedbackTagProps['Row'][];
   emptyMessage?: string;
 }) {
+  const resolvedColumns =
+    columns ??
+    (columnStatuses
+      ? ALL_STATUS_OPTIONS.filter((option) => columnStatuses.includes(option.value))
+      : ALL_STATUS_OPTIONS);
   const [feedbackList, setFeedbackList] = useState(feedback);
 
   useEffect(() => {
@@ -40,8 +42,8 @@ export default function RoadmapBoard({
   const [activeDropColumn, setActiveDropColumn] = useState<FeedbackStatus | null>(null);
 
   const grouped = useMemo(
-    () => groupFeedbackByStatus(feedbackList, columns),
-    [feedbackList, columns]
+    () => groupFeedbackByStatus(feedbackList, resolvedColumns.map((column) => column.value)),
+    [feedbackList, resolvedColumns]
   );
 
   async function updateStatus(feedbackId: string, status: FeedbackStatus) {
@@ -82,7 +84,7 @@ export default function RoadmapBoard({
 
   return (
     <div className='grid w-full grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-5'>
-      {columns.map((column) => {
+      {resolvedColumns.map((column) => {
         const items = grouped[column.value] ?? [];
         const Icon = column.icon;
 
