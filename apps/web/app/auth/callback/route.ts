@@ -9,7 +9,7 @@ export async function GET(request: Request) {
   const cookieStore = cookies();
   const requestUrl = new URL(request.url);
   const code = requestUrl.searchParams.get('code');
-  const token_hash = requestUrl.searchParams.get('token_hash');
+  const tokenHash = requestUrl.searchParams.get('token_hash');
   const type = requestUrl.searchParams.get('type') as EmailOtpType | null;
   const redirect = requestUrl.searchParams.get('successRedirect');
 
@@ -31,8 +31,8 @@ export async function GET(request: Request) {
     }
   );
 
-  if (token_hash && type) {
-    const { error } = await supabase.auth.verifyOtp({ token_hash, type });
+  if (tokenHash && type) {
+    const { error } = await supabase.auth.verifyOtp({ token_hash: tokenHash, type });
     if (error) {
       return NextResponse.redirect(
         new URL(`/login?error=${encodeURIComponent(error.message)}`, requestUrl.origin)
