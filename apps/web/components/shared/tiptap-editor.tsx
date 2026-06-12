@@ -10,13 +10,20 @@ import { Typography } from '@tiptap/extension-typography';
 import { AnyExtension, EditorContent, type Editor, useEditor } from '@tiptap/react';
 import { StarterKit } from '@tiptap/starter-kit';
 import { cn } from '@ui/lib/utils';
-import { Bold, Italic, Link2, List, ListOrdered } from 'lucide-react';
+import { Bold, Heading1, Heading2, Heading3, Italic, Link2, List, ListOrdered } from 'lucide-react';
 import { Button } from 'ui/components/ui/button';
 
-function runEditorCommand(editor: Editor, command: string, attrs?: Record<string, string>) {
-  const commands = editor.commands as Editor['commands'] & Record<string, (attrs?: Record<string, string>) => boolean>;
+function runEditorCommand(editor: Editor, command: string, attrs?: Record<string, string | number>) {
+  const commands = editor.commands as Editor['commands'] &
+    Record<string, (attrs?: Record<string, string | number>) => boolean>;
   commands[command]?.(attrs);
 }
+
+const HEADING_LEVELS = [
+  { level: 1, icon: Heading1 },
+  { level: 2, icon: Heading2 },
+  { level: 3, icon: Heading3 },
+] as const;
 
 function EditorToolbar({ editor }: { editor: Editor }) {
   return (
@@ -41,6 +48,19 @@ function EditorToolbar({ editor }: { editor: Editor }) {
         }}>
         <Italic className='h-4 w-4' />
       </Button>
+      {HEADING_LEVELS.map(({ level, icon: Icon }) => (
+        <Button
+          key={level}
+          type='button'
+          size='sm'
+          variant={editor.isActive('heading', { level }) ? 'secondary' : 'ghost'}
+          className='h-8 w-8 p-0'
+          onClick={() => {
+            runEditorCommand(editor, 'toggleHeading', { level });
+          }}>
+          <Icon className='h-4 w-4' />
+        </Button>
+      ))}
       <Button
         type='button'
         size='sm'
@@ -102,7 +122,11 @@ export default function RichTextEditor({
 }) {
   const editor = useEditor({
     extensions: [
-      StarterKit as AnyExtension,
+      StarterKit.configure({
+        heading: {
+          levels: [1, 2, 3],
+        },
+      }) as AnyExtension,
       Highlight,
       Typography,
       Link.configure({

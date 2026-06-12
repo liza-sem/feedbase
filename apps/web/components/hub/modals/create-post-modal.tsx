@@ -116,7 +116,7 @@ export default function CreatePostModal({
             </div>
 
             <Label className='text-foreground/50 text-xs font-extralight'>
-              Use the toolbar for formatting. Links, lists, and emphasis are supported.
+              Use the toolbar for formatting. Headings, links, lists, and emphasis are supported.
             </Label>
           </div>
         </div>
