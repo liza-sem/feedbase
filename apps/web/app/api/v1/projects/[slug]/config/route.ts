@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getProjectConfigBySlug, updateProjectConfigBySlug } from '@/lib/api/projects';
-import { ProjectConfigProps } from '@/lib/types';
+import { ProjectConfigUpdate } from '@/lib/types';
 
 /*
     Get Project Config by slug
@@ -42,7 +42,7 @@ export async function PATCH(req: Request, context: { params: { slug: string } })
     custom_theme_accent: customThemeAccent,
     custom_theme_border: customThemeBorder,
     logo_redirect_url: logoRedirectUrl,
-  } = (await req.json()) as ProjectConfigProps['Update'];
+  } = (await req.json()) as ProjectConfigUpdate;
 
   // Update project config
   const { data: updatedProjectConfig, error } = await updateProjectConfigBySlug(

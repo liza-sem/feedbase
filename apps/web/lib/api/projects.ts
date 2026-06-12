@@ -1,16 +1,25 @@
 import { decode } from 'base64-arraybuffer';
 import { withProjectAuth, withUserAuth } from '@/lib/auth';
+import { HubCustomTab, parseHubCustomTabs } from '@/lib/hub-tabs';
 import {
   AnalyticsProps,
   ProjectApiKeyProps,
   ProjectApiKeyWithoutTokenProps,
   ProjectConfigProps,
+  ProjectConfigUpdate,
   ProjectConfigWithoutSecretProps,
   ProjectProps,
   TeamMemberProps,
 } from '@/lib/types';
-import { HubCustomTab, parseHubCustomTabs } from '@/lib/hub-tabs';
 import { generateApiToken, isSlugValid, isValidUrl } from '@/lib/utils';
+
+function normalizeProjectConfig(config: Record<string, unknown>): ProjectConfigWithoutSecretProps {
+  return {
+    ...(config as ProjectConfigWithoutSecretProps),
+    feedback_hide_author_names: Boolean(config.feedback_hide_author_names),
+    hub_custom_tabs: parseHubCustomTabs(config.hub_custom_tabs),
+  } as ProjectConfigWithoutSecretProps;
+}
 
 // Get Project
 export const getProjectBySlug = withProjectAuth<ProjectProps['Row']>(
@@ -256,9 +265,7 @@ export const getProjectConfigBySlug = withProjectAuth<ProjectConfigWithoutSecret
     // Get project config
     const { data: config, error: configError } = await supabase
       .from('project_configs')
-      .select(
-        'id, created_at, project_id, changelog_preview_style, changelog_twitter_handle, integration_discord_status, integration_discord_webhook, integration_discord_role_id, custom_domain, custom_domain_verified, integration_sso_status, integration_sso_url, feedback_allow_anon_upvoting, feedback_hide_author_names, hub_custom_tabs, custom_theme, custom_theme_background, custom_theme_border, custom_theme_primary_foreground, custom_theme_root, custom_theme_secondary_background, custom_theme_accent, integration_slack_status, integration_slack_webhook, logo_redirect_url, changelog_enabled'
-      )
+      .select('*')
       .eq('project_id', project!.id);
 
     // Check for errors
@@ -267,14 +274,14 @@ export const getProjectConfigBySlug = withProjectAuth<ProjectConfigWithoutSecret
     }
 
     // Return config
-    return { data: config[0], error: null };
+    return { data: normalizeProjectConfig(config[0] as unknown as Record<string, unknown>), error: null };
   }
 );
 
 // Update project config by slug
 export const updateProjectConfigBySlug = (
   slug: string,
-  data: ProjectConfigProps['Update'],
+  data: ProjectConfigUpdate,
   cType: 'server' | 'route'
 ) =>
   withProjectAuth<ProjectConfigWithoutSecretProps>(async (user, supabase, project, error) => {
@@ -294,6 +301,8 @@ export const updateProjectConfigBySlug = (
     if (configError) {
       return { data: null, error: { message: configError.message, status: 500 } };
     }
+
+    const storedConfig = config as Record<string, unknown>;
 
     // Validate changelog_preview_style
     if (data.changelog_preview_style && !['summary', 'content'].includes(data.changelog_preview_style)) {
@@ -391,9 +400,11 @@ export const updateProjectConfigBySlug = (
         feedback_hide_author_names:
           data.feedback_hide_author_names !== undefined
             ? data.feedback_hide_author_names
-            : config.feedback_hide_author_names,
+            : Boolean(storedConfig.feedback_hide_author_names),
         hub_custom_tabs:
-          hubCustomTabs !== undefined ? hubCustomTabs : config.hub_custom_tabs,
+          hubCustomTabs !== undefined
+            ? hubCustomTabs
+            : parseHubCustomTabs(storedConfig.hub_custom_tabs),
         custom_theme: data.custom_theme !== undefined ? data.custom_theme : config.custom_theme,
         custom_theme_root:
           data.custom_theme_root !== undefined ? data.custom_theme_root : config.custom_theme_root,
@@ -425,11 +436,9 @@ export const updateProjectConfigBySlug = (
           data.logo_redirect_url !== undefined ? data.logo_redirect_url : config.logo_redirect_url,
         changelog_enabled:
           data.changelog_enabled !== undefined ? data.changelog_enabled : config.changelog_enabled,
-      })
+      } as ProjectConfigProps['Update'])
       .eq('id', config.id)
-      .select(
-        'id, created_at, project_id, changelog_preview_style, changelog_twitter_handle, integration_discord_status, integration_discord_webhook, integration_discord_role_id, custom_domain, custom_domain_verified, integration_sso_status, integration_sso_url, feedback_allow_anon_upvoting, feedback_hide_author_names, hub_custom_tabs, custom_theme, custom_theme_background, custom_theme_border, custom_theme_primary_foreground, custom_theme_root, custom_theme_secondary_background, custom_theme_accent, integration_slack_status, integration_slack_webhook, logo_redirect_url, changelog_enabled'
-      );
+      .select('*');
 
     // Check for errors
     if (updateError) {
@@ -437,7 +446,10 @@ export const updateProjectConfigBySlug = (
     }
 
     // Return updated config
-    return { data: updatedConfig[0], error: null };
+    return {
+      data: normalizeProjectConfig(updatedConfig[0] as unknown as Record<string, unknown>),
+      error: null,
+    };
   })(slug, cType);
 
 // Create new API key

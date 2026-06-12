@@ -393,8 +393,6 @@ export interface Database {
           custom_theme_root: string | null;
           custom_theme_secondary_background: string | null;
           feedback_allow_anon_upvoting: boolean | null;
-          feedback_hide_author_names: boolean;
-          hub_custom_tabs: Json;
           id: string;
           integration_discord_role_id: string | null;
           integration_discord_status: boolean;
@@ -422,8 +420,6 @@ export interface Database {
           custom_theme_root?: string | null;
           custom_theme_secondary_background?: string | null;
           feedback_allow_anon_upvoting?: boolean | null;
-          feedback_hide_author_names?: boolean;
-          hub_custom_tabs?: Json;
           id?: string;
           integration_discord_role_id?: string | null;
           integration_discord_status?: boolean;
@@ -451,8 +447,6 @@ export interface Database {
           custom_theme_root?: string | null;
           custom_theme_secondary_background?: string | null;
           feedback_allow_anon_upvoting?: boolean | null;
-          feedback_hide_author_names?: boolean;
-          hub_custom_tabs?: Json;
           id?: string;
           integration_discord_role_id?: string | null;
           integration_discord_status?: boolean;

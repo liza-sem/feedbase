@@ -60,7 +60,10 @@ export default async function HubLayout({ children, params }: Props) {
     notFound();
   }
 
-  const tabs = buildHubTabs(config.changelog_enabled, parseHubCustomTabs(config.hub_custom_tabs));
+  const tabs = buildHubTabs(
+    config.changelog_enabled,
+    parseHubCustomTabs((config as Record<string, unknown>).hub_custom_tabs)
+  );
   const currentTab = tabs.find((tab) => !tab.external && tab.link === `/${pathname!.split('/')[1]}`);
 
   if (!currentTab) {

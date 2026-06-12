@@ -16,6 +16,11 @@ import { ProjectConfigWithoutSecretProps, ProjectProps } from '@/lib/types';
 import FileDrop from '@/components/shared/file-drop';
 import CustomizeThemeModal from '../modals/add-custom-theme-modal';
 
+type HubProjectConfig = ProjectConfigWithoutSecretProps & {
+  feedback_hide_author_names: boolean;
+  hub_custom_tabs: HubCustomTab[];
+};
+
 export default function HubConfigCards({
   projectData,
   projectConfigData,
@@ -24,10 +29,13 @@ export default function HubConfigCards({
   projectConfigData: ProjectConfigWithoutSecretProps;
 }) {
   const [project, setProject] = useState<ProjectProps['Row']>(projectData);
-  const [projectConfig, setProjectConfig] = useState<ProjectConfigWithoutSecretProps>({
+  const [projectConfig, setProjectConfig] = useState<HubProjectConfig>(() => ({
     ...projectConfigData,
-    hub_custom_tabs: parseHubCustomTabs(projectConfigData.hub_custom_tabs),
-  });
+    feedback_hide_author_names: Boolean(
+      (projectConfigData as Record<string, unknown>).feedback_hide_author_names
+    ),
+    hub_custom_tabs: parseHubCustomTabs((projectConfigData as Record<string, unknown>).hub_custom_tabs),
+  }));
 
   function customTabsChanged(current: unknown, original: unknown) {
     return JSON.stringify(parseHubCustomTabs(current)) !== JSON.stringify(parseHubCustomTabs(original));
@@ -100,10 +108,14 @@ export default function HubConfigCards({
               ? projectConfig.feedback_allow_anon_upvoting
               : undefined,
           feedback_hide_author_names:
-            projectConfig.feedback_hide_author_names !== projectConfigData.feedback_hide_author_names
+            projectConfig.feedback_hide_author_names !==
+            Boolean((projectConfigData as Record<string, unknown>).feedback_hide_author_names)
               ? projectConfig.feedback_hide_author_names
               : undefined,
-          hub_custom_tabs: customTabsChanged(projectConfig.hub_custom_tabs, projectConfigData.hub_custom_tabs)
+          hub_custom_tabs: customTabsChanged(
+            projectConfig.hub_custom_tabs,
+            (projectConfigData as Record<string, unknown>).hub_custom_tabs
+          )
             ? parseHubCustomTabs(projectConfig.hub_custom_tabs)
             : undefined,
           custom_theme:
@@ -354,7 +366,11 @@ export default function HubConfigCards({
                   <span className='sr-only'>Light</span>
                 </Button>
 
-                <CustomizeThemeModal projectConfig={projectConfig} setProjectConfig={setProjectConfig}>
+                <CustomizeThemeModal
+                  projectConfig={projectConfig}
+                  setProjectConfig={
+                    setProjectConfig as React.Dispatch<React.SetStateAction<ProjectConfigWithoutSecretProps>>
+                  }>
                   <Button
                     size='icon'
                     variant='outline'
@@ -622,7 +638,12 @@ export default function HubConfigCards({
         <CardFooter>
           <Button
             className='w-32'
-            disabled={!customTabsChanged(projectConfig.hub_custom_tabs, projectConfigData.hub_custom_tabs)}
+            disabled={
+              !customTabsChanged(
+                projectConfig.hub_custom_tabs,
+                (projectConfigData as Record<string, unknown>).hub_custom_tabs
+              )
+            }
             onClick={handleSaveProjectConfig}>
             Save changes
           </Button>
@@ -692,7 +713,8 @@ export default function HubConfigCards({
             className='w-32'
             disabled={
               projectConfig.feedback_allow_anon_upvoting === projectConfigData.feedback_allow_anon_upvoting &&
-              projectConfig.feedback_hide_author_names === projectConfigData.feedback_hide_author_names
+              projectConfig.feedback_hide_author_names ===
+              Boolean((projectConfigData as Record<string, unknown>).feedback_hide_author_names)
             }
             onClick={handleSaveProjectConfig}>
             Save changes

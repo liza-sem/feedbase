@@ -10,7 +10,12 @@ import { toast } from 'sonner';
 import { Avatar, AvatarFallback, AvatarImage } from 'ui/components/ui/avatar';
 import { PROSE_CN } from '@/lib/constants';
 import { normalizeStatus } from '@/lib/feedback-status';
-import { getPublicAuthorInitial, getPublicAuthorName, getPublicAvatarUrl } from '@/lib/hub-author';
+import {
+  getHideAuthorNames,
+  getPublicAuthorInitial,
+  getPublicAuthorName,
+  getPublicAvatarUrl,
+} from '@/lib/hub-author';
 import { FeedbackWithUserProps, ProjectConfigWithoutSecretProps } from '@/lib/types';
 import AuthModal from '../modals/login-signup-modal';
 import FeedbackStatusBadge from './feedback-status-badge';
@@ -42,7 +47,7 @@ export default function FeedbackList({
   const [feedbackList, setFeedbackList] = useState<FeedbackWithTimeAgo[]>(
     updateFeedbackListWithTimeAgo(feedback)
   );
-  const hideAuthorNames = projectConfig?.feedback_hide_author_names ?? false;
+  const hideAuthorNames = getHideAuthorNames(projectConfig);
   const searchParams = useSearchParams();
 
   // Query params

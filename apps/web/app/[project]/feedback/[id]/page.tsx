@@ -9,7 +9,12 @@ import { getCommentsForFeedbackById } from '@/lib/api/comments';
 import { getProjectConfigBySlug } from '@/lib/api/projects';
 import { getPublicProjectFeedback } from '@/lib/api/public';
 import { getCurrentUser } from '@/lib/api/user';
-import { getPublicAuthorInitial, getPublicAuthorName, getPublicAvatarUrl } from '@/lib/hub-author';
+import {
+  getHideAuthorNames,
+  getPublicAuthorInitial,
+  getPublicAuthorName,
+  getPublicAvatarUrl,
+} from '@/lib/hub-author';
 import { PROSE_CN } from '@/lib/constants';
 import AnalyticsWrapper from '@/components/hub/analytics-wrapper';
 import CommentsList from '@/components/hub/feedback/comments/comments-list';
@@ -70,7 +75,7 @@ export default async function FeedbackDetails({ params }: Props) {
   const { data: feedbackList, error } = await getPublicProjectFeedback(params.project, 'server', true, false);
 
   if (error || !feedbackList) {
-    return <div>{error.message}</div>;
+    return <div>{error?.message || 'Unable to load feedback.'}</div>;
   }
 
   // Get current feedback
@@ -96,7 +101,7 @@ export default async function FeedbackDetails({ params }: Props) {
   // Get current user
   const { data: user } = await getCurrentUser('server');
   const { data: config } = await getProjectConfigBySlug(params.project, 'server', true, false);
-  const hideAuthorNames = config?.feedback_hide_author_names ?? false;
+  const hideAuthorNames = getHideAuthorNames(config);
   const authorName = getPublicAuthorName(feedback.user.full_name, hideAuthorNames);
   const authorInitial = getPublicAuthorInitial(feedback.user.full_name, hideAuthorNames);
   const authorAvatar = getPublicAvatarUrl(feedback.user.avatar_url, hideAuthorNames);

@@ -130,6 +130,7 @@ export const withProjectAuth = <T>(handler: WithProjectAuthHandler<T>) => {
 
     // If user.error is not null, then the user is likely not logged in
     if ((user.error !== null && requireLogin) || user.data === null) {
+      // @ts-expect-error Supabase client generics can exceed TS recursion depth here.
       return handler(null, supabase, null, {
         message:
           user.error?.message === 'invalid claim: missing sub claim'

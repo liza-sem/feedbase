@@ -1,12 +1,18 @@
 import { Database } from '@/lib/supabase';
+import type { HubCustomTab } from '@/lib/hub-tabs';
 
 // DB Types
 export type ProjectProps = Database['public']['Tables']['projects'];
 
 export type ProjectConfigProps = Database['public']['Tables']['project_configs'];
 
+export type ProjectConfigUpdate = ProjectConfigProps['Update'] & {
+  feedback_hide_author_names?: boolean;
+  hub_custom_tabs?: HubCustomTab[];
+};
+
 export type ProjectConfigWithoutSecretProps = Omit<
-  Database['public']['Tables']['project_configs']['Row'],
+  ProjectConfigProps['Row'],
   'integration_sso_secret'
 >;
 
