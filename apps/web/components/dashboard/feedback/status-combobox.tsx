@@ -2,41 +2,13 @@
 
 import * as React from 'react';
 import { cn } from '@ui/lib/utils';
-import {
-  Check,
-  CheckCircle2,
-  ChevronDown,
-  CircleDashed,
-  CircleDot,
-  CircleDotDashed,
-  XCircle,
-} from 'lucide-react';
+import { Check, ChevronDown } from 'lucide-react';
+import { ALL_STATUS_OPTIONS } from '@/lib/feedback-status';
 import { Button } from 'ui/components/ui/button';
 import { Command, CommandGroup, CommandItem } from 'ui/components/ui/command';
 import { Popover, PopoverContent, PopoverTrigger } from 'ui/components/ui/popover';
 
-export const statusOptions = [
-  {
-    label: 'Backlog',
-    icon: CircleDashed,
-  },
-  {
-    label: 'Planned',
-    icon: CircleDotDashed,
-  },
-  {
-    label: 'In Progress',
-    icon: CircleDot,
-  },
-  {
-    label: 'Completed',
-    icon: CheckCircle2,
-  },
-  {
-    label: 'Rejected',
-    icon: XCircle,
-  },
-];
+export const statusOptions = ALL_STATUS_OPTIONS.map(({ label, icon }) => ({ label, icon }));
 
 interface ComboboxProps {
   initialValue?: string | null;

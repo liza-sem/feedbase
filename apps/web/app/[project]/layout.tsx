@@ -40,26 +40,24 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   };
 }
 
-const tabs = [
-  {
-    name: 'Feedback',
-    link: '/feedback',
-  },
-  {
-    name: 'Changelog',
-    link: '/changelog',
-  },
-];
+function getHubTabs(changelogEnabled: boolean) {
+  const tabs = [
+    { name: 'Feedback', link: '/feedback' },
+    { name: 'Roadmap', link: '/roadmap' },
+    { name: 'Changelog', link: '/changelog' },
+  ];
+
+  if (!changelogEnabled) {
+    return tabs.filter((tab) => tab.link !== '/changelog');
+  }
+
+  return tabs;
+}
 
 export default async function HubLayout({ children, params }: Props) {
   const headerList = headers();
   const pathname = headerList.get('x-pathname');
   const hostname = headerList.get('host');
-  const currentTab = tabs.find((tab) => tab.link === `/${pathname!.split('/')[1]}`);
-
-  if (!currentTab) {
-    redirect('/feedback');
-  }
 
   // Get project data
   const { data: project, error } = await getProjectBySlug(params.project, 'server', true, false);
@@ -75,14 +73,16 @@ export default async function HubLayout({ children, params }: Props) {
     notFound();
   }
 
+  const tabs = getHubTabs(config.changelog_enabled);
+  const currentTab = tabs.find((tab) => tab.link === `/${pathname!.split('/')[1]}`);
+
+  if (!currentTab) {
+    redirect('/feedback');
+  }
+
   // Check if custom domain is set and redirect to it
   if (config.custom_domain && config.custom_domain_verified && hostname !== config.custom_domain) {
     redirect(`https://${config.custom_domain}`);
-  }
-
-  // Check if any modules are disabled and remove them from the tabs
-  if (!config.changelog_enabled) {
-    tabs.splice(1, 1);
   }
 
   // Get current user
